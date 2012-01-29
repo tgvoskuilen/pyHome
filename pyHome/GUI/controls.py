@@ -24,54 +24,79 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 import wx
 
-class DeviceListCtrl(wx.ListCtrl):
-    def __init__(self, *args, **kwargs):
+###############################################################################
+class ObjectListCtrl(wx.ListCtrl):
+    """
+    A wx.ListCtrl object that can have Python objects associated with it
+    more easily than a standard ListCtrl.
+    """
+    def __init__(self, id_str='Tag', *args, **kwargs):
         wx.ListCtrl.__init__(self, *args, **kwargs)
-        self.map = {}
+        self._map = {}
         self.col_names = []
+        self.id_str = id_str
         self.Bind(wx.EVT_LIST_DELETE_ITEM, self._delete_item)
         self.Bind(wx.EVT_LIST_DELETE_ALL_ITEMS, self._delete_all_items)
         
     def set_cols(self, cols):
+        """
+        Provide a list of strings to be used as the ListCtrl column headers.
+        
+        This list must correspond with the keys for the dictionary
+        passed in update_objects.
+        """
         self.col_names = []
         for i, col in enumerate(cols):
             self.InsertColumn(i, col[0], width=col[1])
             self.col_names.append(col[0])
 
 
-    def update_devices(self, devices):
-        #TODO Deal with deleted devices still in the ListCtrl
-        for device in devices:
-            if device['Tag'] in self.map:
-                self.map[device['Tag']] = device
+    def update_objects(self, objects):
+        """
+        In this case, 'objects' is a list of dictionaries. Each dictionary must
+        have a unique id in the field 'id_str', and must have a field for each
+        string in cols.
+        
+        If a device state is changed, this looks it up in the ListCtrl and changes
+        its properties, without having to erase the entire ListCtrl
+        """
+        #TODO Deal with deleted objects still in the ListCtrl
+        for obj in objects:
+            if obj[id_str] in self._map:
+                self._map[obj[id_str]] = obj
                 row = 0
-                while row < self.GetItemCount():
+                while row < self.GetItemCount(): #There's got to be a more pythonic way of doing this...
                     key = self.GetItemData(row)
-                    if key == device['Tag']:
+                    if key == device[id_str]:
                         break
                     row += 1
             else:
-                self.map[device['Tag']] = device
-                row = self.InsertStringItem(self.GetItemCount(), device[self.col_names[0]])
-                self.SetItemData(row, device['Tag'])
+                self._map[obj[id_str]] = obj
+                row = self.InsertStringItem(self.GetItemCount(), str(obj[self.col_names[0]]))
+                self.SetItemData(row, obj[id_str])
     
             for i, col in enumerate(self.col_names):
                 if i > 0:
-                    self.SetStringItem(row, i, str(device[col]))
+                    self.SetStringItem(row, i, str(obj[col]))
 
 
     def _delete_all_items(self, event):
-        self.map.clear()
+        """ Untested """
+        self._map.clear()
         event.Skip()
         
 
     def _delete_item(self, event):
+        """ Untested """
         try:
-            del self.map[event.Data]
+            del self._map[event.Data]
         except KeyError:
             pass
         event.Skip()
         
+        
+        
+###############################################################################
 class DeviceMenu(wx.Menu):
     """ Right click context menu for devices in the Device List """
     def __init__(self, parent, room, device):
@@ -83,3 +108,5 @@ class DeviceMenu(wx.Menu):
             mi = wx.MenuItem(self, wx.NewId(), item['Name'])
             self.AppendItem(mi)
             self.Bind(wx.EVT_MENU, item['Fcn'], mi)
+            
+###############################################################################

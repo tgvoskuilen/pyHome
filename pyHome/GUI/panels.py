@@ -24,16 +24,19 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 import wx
-from controls import DeviceListCtrl
+from controls import ObjectListCtrl
 from controls import DeviceMenu
 
+###############################################################################
 class DevicePanel(wx.Panel):
     def __init__(self, parent):
         wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
         self.parent = parent
         self.house = self.parent.house
         
-        self.status_list = DeviceListCtrl(parent=self, id=-1, style=wx.LC_REPORT | wx.LC_HRULES | wx.SUNKEN_BORDER)
+        self.status_list = ObjectListCtrl(parent=self, id=-1, 
+                             style=wx.LC_REPORT | wx.LC_HRULES | wx.SUNKEN_BORDER)
+                             
         self.status_list.set_cols([('Device Name',100),
                                    ('Room',100),
                                    ('Address',100),
@@ -48,10 +51,12 @@ class DevicePanel(wx.Panel):
 
 
     def update(self, event):
+        """ The frame's timer calls this regularly to keep the panel updated """
         self.status_list.update_devices( self.house.get_devices() )
 
 
     def _call_device_menu(self, event):
+        """ Generate a right click context menu on devices in the list """
         item = self.status_list.GetFirstSelected()
         tag = self.status_list.GetItemData(item)
         try:
