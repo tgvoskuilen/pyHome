@@ -101,6 +101,7 @@ class Message(BaseMessage):
 
 
     def process(self, house):
+        """ Locate the processor for this message and call it """
         try:
             self._InsteonCommandTypes[self._data[1]]['Callback'](house)
         except IndexError, KeyError:
@@ -108,10 +109,18 @@ class Message(BaseMessage):
 
 
     def __ignore(self, house):
+        """ Graveyard for unsupported message types """
         pass
 
 
     def __process_insteon_std_recv(self, house):
+        """
+        Process 0x50 messages received by the PLM.
+        
+        This is the most common type of message, and is usually in response
+        to a change in a physical device state.
+        
+        """
         # Get sender address and global type
         self.sender = self._data[2:5]
         self.type = self._InsteonMessageTypes[self._data[8] >> 5][1]
@@ -237,16 +246,15 @@ class Dimmer(BaseDevice):
 
 
     def toggle(self, level=100, fast=False):
-        """
-        If the light is on, turn it off. Do the opposite if it is on.
-        """
+        """ Toggle the light state """
         if self.state[0] == 'On':
-            self.turn_off(level, fast)
+            self.turn_off(fast)
         else:
-            self.turn_on(fast)
+            self.turn_on(level, fast)
 
 
     def turn_on(self, level=100, fast=False):
+        """ Turn the light on to level (0-100) at a normal or fast rate """
         level = min(max(0,level),100)
         cmd1 = 0x12 if fast else 0x11
         cmd2 = int(round(level * 2.55))
@@ -255,12 +263,14 @@ class Dimmer(BaseDevice):
 
 
     def turn_off(self, fast=False):
+        """ Turn the light off at a normal or fast rate """
         cmd1 = 0x14 if fast else 0x13
         msg = Message([0x02,0x62]+self.address+[0x0F,cmd1,0xFF])
         self.house.PLM.send_queue.put( msg )
             
             
     def ramp_on(self, time=10., level=100):
+        """ Ramp on in 'time' seconds (0.1-480) to level (0-100) """
         # http://www.madreporite.com/insteon/ramprate.htm
         # byte = 1 1 1 1   1 1 0 0
         #       | level | rate code |
@@ -278,6 +288,7 @@ class Dimmer(BaseDevice):
 
       
     def ramp_off(self, time=10.):
+        """ Ramp off in 'time' seconds (0.1-480) """
         #Coerce inputs
         time = min(max(0.1,time),480)
 
@@ -293,6 +304,11 @@ class Dimmer(BaseDevice):
 #############################################################################################
 # PLM interface thread class
 class PLM(threading.Thread):
+    """
+    Provide an interface with the Insteon PLM. This is a dedicated PLM thread
+    with a send_queue that other devices can add message to. Received messages
+    are processed and passed on according to their type.
+    """
     def __init__(self, usbport, baud=19200, timeout=0):
         threading.Thread.__init__(self)
         self.send_queue = Queue.Queue()
@@ -318,5 +334,6 @@ class PLM(threading.Thread):
                     self._message.process(self.house)                
                     self._message.clear()
 
+            # Sleep a little to keep this from using half of my CPU...
             time.sleep(0.005)
 
