@@ -1,9 +1,18 @@
-import socket               # Import socket module
+# This is a very simple example client that can send commands to pyHome
+# Example commands would be methods of the Dimmer class, in this case:
+#  turn_on
+#  turn_off
+#  ramp_on
+#  toggle
+#  etc...
+
+
+import socket
 import time
 import pickle
 
-host = '192.168.1.116' # Get local machine name
-port = 12345                # Reserve a port for your service.
+host = '192.168.1.116' 
+port = 12345
 
 while True:
     s = socket.socket()         # Create a socket object
@@ -20,7 +29,6 @@ while True:
 
     mydict_str = pickle.dumps(mycommand)
     s.send(mydict_str)
-    #s.send(command)
 
     data = s.recv(4096)
     print "Response:", data
