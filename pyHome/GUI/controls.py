@@ -62,18 +62,18 @@ class ObjectListCtrl(wx.ListCtrl):
         """
         #TODO Deal with deleted objects still in the ListCtrl
         for obj in objects:
-            if obj[id_str] in self._map:
-                self._map[obj[id_str]] = obj
+            if obj[self.id_str] in self._map:
+                self._map[obj[self.id_str]] = obj
                 row = 0
                 while row < self.GetItemCount(): #There's got to be a more pythonic way of doing this...
                     key = self.GetItemData(row)
-                    if key == device[id_str]:
+                    if key == obj[self.id_str]:
                         break
                     row += 1
             else:
-                self._map[obj[id_str]] = obj
+                self._map[obj[self.id_str]] = obj
                 row = self.InsertStringItem(self.GetItemCount(), str(obj[self.col_names[0]]))
-                self.SetItemData(row, obj[id_str])
+                self.SetItemData(row, obj[self.id_str])
     
             for i, col in enumerate(self.col_names):
                 if i > 0:

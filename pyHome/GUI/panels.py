@@ -52,7 +52,7 @@ class DevicePanel(wx.Panel):
 
     def update(self, event):
         """ The frame's timer calls this regularly to keep the panel updated """
-        self.status_list.update_devices( self.house.get_devices() )
+        self.status_list.update_objects( self.house.get_devices() )
 
 
     def _call_device_menu(self, event):
@@ -60,8 +60,8 @@ class DevicePanel(wx.Panel):
         item = self.status_list.GetFirstSelected()
         tag = self.status_list.GetItemData(item)
         try:
-            room = self.status_list.map[tag]['Room']
-            dev_name = self.status_list.map[tag]['Device Name']
+            room = self.status_list._map[tag]['Room']
+            dev_name = self.status_list._map[tag]['Device Name']
             self.PopupMenu(DeviceMenu(self, room, dev_name))
         except KeyError: #Right clicks on no items generate a tag of 0
             pass
