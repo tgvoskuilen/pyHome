@@ -4,11 +4,9 @@ import Queue
 import socket
 import pickle
 
-from pyHome.core.plugins import BaseServer
-
 #############################################################################################
 # server communication interface
-class TCPServer(BaseServer):
+class TCPServer(threading.Thread):
     """
     This starts and monitors a TCP server which can receive commands to call Device functions. The
     device itself handles generating the appropriate job (which is device specific) so this only needs
@@ -22,7 +20,14 @@ class TCPServer(BaseServer):
     interface with the House
     """
     def __init__(self, ip='127.0.0.1', port=12345):
-        BaseServer.__init__(self, ip, port)
+        threading.Thread.__init__(self)
+        self._recv_queue = Queue.Queue()
+        self._send_queue = Queue.Queue()
+        self.host = ip
+        self.port = port
+        self.running = True
+        self.setDaemon(True)
+        self.house = None
 
 
     def run(self):

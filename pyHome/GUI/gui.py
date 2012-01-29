@@ -1,13 +1,13 @@
 
 import wx
-from wx.lib.pubsub import Publisher
 import time
 import copy
+import threading
 
-from pyHome.core.plugins import BaseGUI
 
 ## SimpleGUI ##################################################################
 class DeviceMenu(wx.Menu):
+    """ Right click context menu for devices in the Device List """
     def __init__(self, parent, room, device):
         wx.Menu.__init__(self)
         self.parent = parent
@@ -30,7 +30,6 @@ class DeviceList(wx.Panel):
         self.timer.Start(self.parent.parent.update_freq)
 
         #Set up frame
-        #self.panel = wx.Panel(self, id=wx.ID_ANY)
         self.status_list = DeviceListCtrl(parent=self, id=-1, style=wx.LC_REPORT | wx.LC_HRULES | wx.SUNKEN_BORDER)
         self.status_list.set_cols([('Device Name',100),
                                    ('Room',100),
@@ -149,7 +148,7 @@ class SimpleFrame(wx.Frame):
         self.Destroy()
 
 
-class SimpleGUI(BaseGUI):
+class SimpleGUI(threading.Thread):
     """
     This simple GUI shows a ListCtrl with all the devices in the House class.
     It shows and updates their status as they change.
@@ -157,7 +156,12 @@ class SimpleGUI(BaseGUI):
     Future: Double clicking on an item toggles its state.
     """
     def __init__(self):
-        BaseGUI.__init__(self)
+        threading.Thread.__init__(self)
+        self.running = True
+        self.setDaemon(True)
+        self.mainframe = None
+        self.house = None
+        self.update_freq = 100  # Update frequency in ms
 
     def run(self):
         app = wx.App(False)

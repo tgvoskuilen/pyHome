@@ -12,19 +12,15 @@ class House(object):
     It contains all the devices and the interface to the home automation system.
     It also runs a server to accept commands from pyHome clients.
     
-    :param PLM: A PLM derived from BasePLM
-    :type PLM: BasePLM
-    :param server: A server derived from BaseServer
-    :type server: BaseServer
-    :param GUI: A GUI derived from BaseGUI
-    :type GUI: BaseGUI
+    :param PLM: A PLM derived from :class:`threading.Thread()`
+    :param server: A server class
+    :param GUI: An observer GUI class derived from :class:`threading.Thread()`
      
     """
     def __init__(self, PLM=None, server=None, GUI=None):
         """
         The house should be initialized with at least a PLM. A house without
         a PLM is somewhat useless.
-        
         """
         
         #: The house PLM is derived from the BasePLM plugin. A house does not
@@ -73,11 +69,11 @@ class House(object):
         **Events**:
          * Events are added to the event_queue using put()
          * A string event 'Kill' stops the program
-         * All other events must have the following methods defined:
+         * All other events must have the following attributes defined:
          
-           * get_type() - Gets the event type (defined in globals.py)
-           * get_sender() - Return the 3-byte address (list) of the sending device (TODO: Address class?)
-           * get_payload() - Return the information in the event message (TODO: Make global template for this)
+           * *type* - Gets the event type (defined in globals.py)
+           * *sender* - Return the 3-byte address (list) of the sending device
+           * *state* - Return the information in the event message
 
 
         **Rules**:
@@ -102,7 +98,6 @@ class House(object):
             self.GUI.start()    
 
         self.running = True
-
 
         # Start main loop
         self.start_time = time.time()

@@ -8,7 +8,6 @@ import Queue
 # Import pyHome core classes to derive Insteon specific subclasses from
 from pyHome.core.messages import BaseMessage
 from pyHome.core.devices import BaseDevice
-from pyHome.core.plugins import BasePLM
 from pyHome.globals import *
 
 #############################################################################################
@@ -99,6 +98,7 @@ class Message(BaseMessage):
                                            'Callback':self.__ignore},
                                      0x73:{'Name':'Get IM Configuration',      'Length':6, 
                                            'Callback':self.__ignore}}
+
 
     def process(self, house):
         try:
@@ -216,14 +216,19 @@ class Dimmer(BaseDevice):
         
 
     def get_context_menu_items(self):
-        return [{'Name':'Turn On (100%)', 'Fcn':lambda event: self.turn_on()},
+        """ Generate a set of context menu commands for GUI right clicks """
+        return [{'Name':'Turn On (100%)','Fcn':lambda event: self.turn_on()},
                 {'Name':'Turn On (75%)', 'Fcn':lambda event: self.turn_on(75)},
                 {'Name':'Turn On (50%)', 'Fcn':lambda event: self.turn_on(50)},
                 {'Name':'Turn On (25%)', 'Fcn':lambda event: self.turn_on(25)},
-                {'Name':'Turn Off','Fcn':lambda event: self.turn_off()}]
+                {'Name':'Turn Off',      'Fcn':lambda event: self.turn_off()}]
 
 
     def set_state(self, new_state):
+        """ 
+        Set the device state. Locked for thread safety, although
+        currently only the House class changes device states.
+        """
         self.lock.acquire()
         try:
             self.state = new_state
@@ -231,18 +236,18 @@ class Dimmer(BaseDevice):
             self.lock.release()
 
 
-    def get_state(self):
-        return self.state
-
-
-    def toggle(self):
+    def toggle(self, level=100, fast=False):
+        """
+        If the light is on, turn it off. Do the opposite if it is on.
+        """
         if self.state[0] == 'On':
-            self.turn_off()
+            self.turn_off(level, fast)
         else:
-            self.turn_on()
+            self.turn_on(fast)
 
 
     def turn_on(self, level=100, fast=False):
+        level = min(max(0,level),100)
         cmd1 = 0x12 if fast else 0x11
         cmd2 = int(round(level * 2.55))
         msg = Message([0x02,0x62]+self.address+[0x0F,cmd1,cmd2])
@@ -286,10 +291,14 @@ class Dimmer(BaseDevice):
 
 
 #############################################################################################
-# PLM interface class
-class PLM(BasePLM):
+# PLM interface thread class
+class PLM(threading.Thread):
     def __init__(self, usbport, baud=19200, timeout=0):
-        BasePLM.__init__(self)
+        threading.Thread.__init__(self)
+        self.send_queue = Queue.Queue()
+        self.running = True
+        self.setDaemon(True)
+        self.house = None
         self._message = Message()
         self._serialport = serial.Serial(usbport, baud, timeout=timeout)
         
