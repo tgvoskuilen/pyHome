@@ -1,16 +1,5 @@
 # pyHome demonstration program
-#  by Tyler Voskuilen
-#
-#  TODO:
-#    * Write a client class
-#    * Think about a client GUI design (wxPython, web, android?)
-#    * Think about a server GUI design (wxPython)
-#    * Compare with existing Insteon programs, get an edge
-#    * Work on SSH or secure server
-#
-#
-#    * Improve Sphinx documentation
-#
+
 
 
 import pyHome
@@ -33,11 +22,6 @@ house.rule_queue.put( pyHome.Rule(room='Office',
                             condition="time.time() - self.last_call_time > 5",
                             persist="self.calls < 1"))
 
-#house.AddRule( pyHome.Rule(room='Office',
-#                           device='Desk Lamp',
-#                           commands=['self.device.TurnOff()'],
-#                           condition="self.device.state[0] == 'On'",
-#                           persist="self.calls < 6"))
 
 #Start the house
 house.activate()
