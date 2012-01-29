@@ -1,0 +1,17 @@
+
+import Queue
+
+
+#############################################################################################
+class BaseDevice(object):
+    """
+    Any HA device. This can generate Jobs to send to the PLM.
+    Each device is given a unique software tag with id()
+    """
+    def __init__(self, name, address):
+        self.tag = id(self)           # Unique device id number
+        self.name = name              # Device name (used in room dictionary)
+        self.address = address        # Address byte list, e.g. [0x18, 0xFF, 0x00]
+        self.incoming = Queue.Queue() # Device message queue, used to deliver updates and job responses
+        self.state = ('Off',0)
+
