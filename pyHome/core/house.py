@@ -47,36 +47,22 @@ class House(object):
         a PLM is somewhat useless.
         """
         
-        #: The house PLM is derived from the BasePLM plugin. A house does not
-        #: need a PLM to run, although it is somewhat pointless without one.
         self.PLM = PLM
         
         if PLM is not None:
             self.PLM.house = self
            
-        #: The house GUI is derived from the BaseGUI plugin. A couple GUIs
-        #: are available, or you can run it as a server with no GUI.
         self.GUI = GUI
         
         if GUI is not None:
             self.GUI.house = self
  
-        #: The house server allows remote clients to connect to and control
-        #: the house. The interface by which the clients access the house is
-        #: similar to the way a local GUI would.
         self.server = server
         
         if server is not None:
             self.server.house = self
             
-        #: The house rules can be added to the rule_queue by any thread. It is
-        #: an instance of :class:`Queue.Queue()`, so put() should be used to add items
         self.rule_queue = Queue.Queue()
-        
-        #: The house event queue is where the house is alerted about events in
-        #: the house. It is typically through a message received by the PLM.
-        #: Since this is also an instance of :class:`Queue.Queue()`, use put()
-        #: to add items to it.
         self.event_queue = Queue.Queue()
 
         self.active_rules = []
