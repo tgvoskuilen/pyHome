@@ -167,7 +167,7 @@ class Rule(object):
         return eval(self._persist_str)
 
 
-#############################################################################################
+###############################################################################
 class Command(object):
     """
     Commands are sent in by clients (that is their only source). Unlike rules, they are
@@ -181,7 +181,7 @@ class Command(object):
 
 
 
-
+    
 
 
 

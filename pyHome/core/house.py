@@ -27,7 +27,6 @@ import Queue
 import time
 import threading
 
-from pyHome.globals import *
 
 ###############################################################################
 class House(object):
@@ -122,7 +121,7 @@ class House(object):
                 event = self.event_queue.get(False)
 
                 # Check for kill messages (just the string 'Kill')
-                if event == EVENT_TYPE_KILL:
+                if event == 'Kill':
                     self.running = False
 
                     if self.server is not None:
@@ -135,7 +134,7 @@ class House(object):
 
                 # Only try to match direct messages (ignore broadcasts)
                 try:
-                    if event.type == EVENT_TYPE_DIRECT:
+                    if event.type == 'Direct':
                         for room in self.db:
                             for device in self.db[room]:
                                 if event.sender == self.db[room][device].address:
@@ -158,7 +157,7 @@ class House(object):
 
 
             # Insteon devices take about 0.3 seconds to respond and change.
-            time.sleep(0.1)
+            time.sleep(0.05)
             
 
     def get_devices(self):

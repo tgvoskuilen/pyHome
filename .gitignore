@@ -1,2 +1,6 @@
 *.pyc
 *.py~
+*.local
+*.gitignore~
+*.local~
+README~

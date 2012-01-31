@@ -32,7 +32,6 @@ import Queue
 # Import pyHome core classes to derive Insteon specific subclasses from
 from pyHome.core.messages import BaseMessage
 from pyHome.core.devices import BaseDevice
-from pyHome.globals import *
 
 #############################################################################################
 class Message(BaseMessage):
@@ -46,22 +45,14 @@ class Message(BaseMessage):
         BaseMessage.__init__(self, data)
 
         # What can be in command byte 1, and how to process byte 2, if applicable
+        # http://www.madreporite.com/insteon/commands.htm
         self._InsteonCommands = {0x11:{'State':'On', 'Default':100, 'Fcn':lambda x: int(round(x/2.55))},
                                  0x12:{'State':'On', 'Default':100, 'Fcn':lambda x: int(round(x/2.55))},
                                  0x13:{'State':'Off','Default':0},
                                  0x14:{'State':'Off','Default':0},
                                  0x2E:{'State':'On', 'Default':100, 'Fcn':lambda x: int((x >> 4) / 15. * 100)},
                                  0x2F:{'State':'Off','Default':0}}
-
-        # How to tranlate Insteon message types to global message types
-        self._InsteonMessageTypes = {0:('P2P Direct Message',EVENT_TYPE_DIRECT),
-                                     1:('ACK of Direct Message',EVENT_TYPE_DIRECT),
-                                     2:('Group Cleanup Direct Message',EVENT_TYPE_DIRECT),
-                                     3:('ACK of Group Cleanup Direct Message',EVENT_TYPE_DIRECT),
-                                     4:('Broadcast message',EVENT_TYPE_BROADCAST),
-                                     5:('NAK of Direct Message',EVENT_TYPE_NAK),
-                                     6:('Group Broadcast Message',EVENT_TYPE_BROADCAST),
-                                     7:('NAK of Group Cleanup Direct Message',EVENT_TYPE_BROADCAST)}
+                                 
 
         # Parse the 2nd byte to get the command type, length, and callback
         self._InsteonCommandTypes = {0x50:{'Name':'Insteon Standard Received', 'Length':11,
@@ -87,7 +78,7 @@ class Message(BaseMessage):
                                      0x61:{'Name':'Send All-Link Command',     'Length':6, 
                                            'Callback':self.__ignore},
                                      0x62:{'Name':'Send Insteon Message',      'Length':9, 
-                                           'Callback':self.__ignore},
+                                           'Callback':self.__process_insteon_cmd_echo},
                                      0x63:{'Name':'Send X10 Message',          'Length':5, 
                                            'Callback':self.__ignore},
                                      0x64:{'Name':'Start All-Linking',         'Length':5, 
@@ -134,9 +125,14 @@ class Message(BaseMessage):
 
     def __ignore(self, house):
         """ Graveyard for unsupported message types """
+        print "Ignoring:", self
+
+
+    def __process_insteon_cmd_echo(self, house):
+        """ Do nothing with echo messages """
         pass
-
-
+        
+    
     def __process_insteon_std_recv(self, house):
         """
         Process 0x50 messages received by the PLM.
@@ -145,15 +141,21 @@ class Message(BaseMessage):
         to a change in a physical device state.
         
         """
+        # Parse message flag byte
+        msg_flag = self._data[8]
+        
+        is_broadcast = msg_flag & 1<<7 == 1<<7
+        is_ack_direct = msg_flag & 1<<5 == 1<<5
+        
         # Get sender address and global type
         self.sender = self._data[2:5]
-        self.type = self._InsteonMessageTypes[self._data[8] >> 5][1]
+        self.type = 'Direct' if not is_broadcast else 'Broadcast'
 
         # Parse message command
         cmd = self._data[9:11]
         newstate = self._InsteonCommands[cmd[0]]['State']
 
-        if self._InsteonCommands[cmd[0]].has_key('Fcn') and self._data[8] & 1<<5 == 1<<5:
+        if self._InsteonCommands[cmd[0]].has_key('Fcn') and is_ack_direct:
             newlevel = self._InsteonCommands[cmd[0]]['Fcn'](cmd[1])
         else:
             newlevel = self._InsteonCommands[cmd[0]]['Default']
