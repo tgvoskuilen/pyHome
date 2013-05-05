@@ -23,4 +23,10 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+import pyHome.core
+
+class OpenSensor(pyHome.core.OpenSensor):
+    def __init__(self, house, xml):
+        pyHome.core.OpenSensor.__init__(self, house, xml)
+        
+    

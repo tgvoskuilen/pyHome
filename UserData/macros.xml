@@ -1,0 +1,6 @@
+<data>
+<macro active="True" name="Office Light Control"><description>Turns office lamp on and off based on motion sensor</description><code>if self.devices['Office']['Motion'].trigger_on():
+    self.devices['Office']['Desk Lamp'].turn_on()
+
+if self.devices['Office']['Motion'].trigger_off():
+    self.devices['Office']['Desk Lamp'].turn_off()</code></macro></data>

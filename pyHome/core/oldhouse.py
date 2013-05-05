@@ -26,7 +26,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 import Queue
 import time
 import threading
+import os
+import xml.etree.ElementTree as ET
 
+
+import pyHome.advancedGUI as GUI
+#from pyHome import Insteon
 
 ###############################################################################
 class House(object):
@@ -40,23 +45,50 @@ class House(object):
     :param GUI: An observer GUI class derived from :class:`threading.Thread()`
      
     """
-    def __init__(self, PLM=None, server=None, GUI=None):
+    def __init__(self, usbport=None):
         """
-        The house should be initialized with at least a PLM. A house without
-        a PLM is somewhat useless.
+        Initialize the house with the USB port it should look for the PLM on.
         """
         
-        self.PLM = PLM
+        # Load XML files
+        self.dataFolder = 'UserData'
+        configTree = ET.parse(os.path.join(self.dataFolder,'config.xml'))
+        configRoot = configTree.getroot()
         
-        if PLM is not None:
-            self.PLM.house = self
+        self.floorPlanFile = configRoot.findall("floorplan")[0].get("file")
+        print "Floorplan file = ", self.floorPlanFile
+        
+        deviceTypes = {"Insteon Dimmer": Insteon.Dimmer}
+
+
+        devTree = ET.parse(os.path.join(self.dataFolder,'devices.xml'))
+        devRoot = devTree.getroot()
+        
+        self.devices = []
+        self.rooms = []
+        for dev in devRoot.findall("device"):
+            name = dev.get("name")
+            room = dev.get("room")
+            addr = [int(x) for x in dev.find("address").text.split(":")]
+            
+            pos = dev.find("pos").text
+            if pos is not None:
+                pos = [int(x) for x in pos.split(" ")]
+            
+            self.devices.append(   \
+                 deviceTypes[dev.get("type")](self, room, name, addr, pos))
+            
+            if room not in self.rooms:
+                self.rooms.append(room)
+            
+            
+        # Set up other objects
+        self.PLM = Insteon.PLM(self, usbport)
            
-        self.GUI = GUI
-        
-        if GUI is not None:
-            self.GUI.house = self
+        self.GUI = GUI.Thread(self)
+        self.logger = self.GUI.log_event
  
-        self.server = server
+        self.server = None #no server for now
         
         if server is not None:
             self.server.house = self
@@ -65,10 +97,9 @@ class House(object):
         self.event_queue = Queue.Queue()
 
         self.active_rules = []
-        self.db = {}
         self.lock = threading.Lock()
        
-
+       
     def activate(self):
         """
         Once the house is configured, call activate to start all the component
@@ -106,6 +137,8 @@ class House(object):
         if self.GUI is not None:
             self.GUI.start()    
 
+        time.sleep(0.5)
+
         self.running = True
 
         # Start main loop
@@ -135,52 +168,64 @@ class House(object):
                 # Only try to match direct messages (ignore broadcasts)
                 try:
                     if event.type == 'Direct':
-                        for room in self.db:
-                            for device in self.db[room]:
-                                if event.sender == self.db[room][device].address:
-                                    match = self.db[room][device]
+                        for device in self.devices:
+                            if event.sender == device.address:
+                                match = device
+                                break
 
+                        disp_str = '%s message from %s (%s) of state change to (%s, %s)' % \
+                        (event.type, match.name, ":".join(['%02X' % x for x in event.sender]), \
+                         event.state[0], event.state[1])
+                        self.logger(disp_str)
                         match.set_state(event.state)
   
                 except AttributeError, NameError:
-                    print "Error: Event could not be matched:", str(event)
+                    self.logger("Error: Event could not be matched: "+str(event))
 
             # Check the Rules in the list
             for rule in self.active_rules:
                 if rule.condition() and time.time() - rule.last_call_time > 0.5:
-                    print "Performing action for rule", rule.rule_id
+                    self.logger("Performing action for rule %s"
+                                 % str(rule.rule_id))
                     rule.action()
 
                     if not rule.persist():
-                        print "Deleting rule", rule.rule_id, "from the active rule list"
+                        self.logger("Deleting rule "+str(rule.rule_id)
+                                    +" from the active rule list")
                         self.active_rules.remove(rule)
 
 
             # Insteon devices take about 0.3 seconds to respond and change.
             time.sleep(0.05)
             
-
-    def get_devices(self):
+    def get_rooms(self):
         """
-        Get the house device dictionary, with extra formatting.
+        Get the current list of rooms, with 'All Rooms' added in front
+        """
+        rooms = ['All Rooms']
+        self.lock.acquire()
+        try:
+            for room in self.rooms:
+                rooms.append(room)
+        finally:
+            self.lock.release()
 
-        This requires devices to have the following methods or attributes
-         * tag - Unique integer device tag
-         * address - Three-byte list
-         * state - Tuple of current state
-
+        return rooms
+        
+    
+    def get_devices(self, room=None):
+        """
+        Get a list of devices either in the whole house or a specific room
         """
         devs = []
         self.lock.acquire()
         try:
-            for room in self.db:
-                for device in self.db[room]:
-                    devs.append({'Tag':self.db[room][device].tag,
-                                 'Device Name':device,
-                                 'Room':room,
-                                 'Address':":".join(['%02X' % x for x in self.db[room][device].address]),
-                                 'State':'%s (%d%%)' % self.db[room][device].state}) 
-                                                        #TODO - Give device a "get_state_str()" function
+            if room is None or room == 'All Rooms':
+                devs = self.devices
+            else:
+                for dev in self.devices:
+                    if dev.room == room:
+                        devs.append(dev) 
         finally:
             self.lock.release()
 
@@ -195,30 +240,27 @@ class House(object):
         """
         self.lock.acquire()
         try:
-            self.db[room] = {}
+            self.rooms.append(room)
         finally:
             self.lock.release()
 
 
     def add_device(self, room, device):
         """
-        TODO: Check that device is based on BaseDevice class
-        
-        Add a device to a room. If the specified room does not
+        Add a device to the house. If the specified room does not
         exist, it will be added automatically. The room is specified
         by a string (its name) and the device is an instance of a subclass of
         the BaseDevice class.
-
-        This requires that the device have the attribute 'name' defined
         """
         self.lock.acquire()
         try:
             device.house = self
-            try:
-                self.db[room][device.name] = device
-            except KeyError:
-                self.db[room] = {}
-                self.db[room][device.name] = device
+            if room not in self.rooms:
+                self.rooms.append(room)
+            
+            device.room = room
+            self.devices.append(device)
+
         finally:
             self.lock.release()
 

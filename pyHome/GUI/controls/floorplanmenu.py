@@ -23,4 +23,20 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from server import *
+import wx
+
+       
+class FloorplanMenu(wx.Menu):
+    """ Right click context menu for the floorplan panel """
+    def __init__(self, parent):
+        wx.Menu.__init__(self)
+        
+        menuItems = [{'Name':'Change Floorplan', 'Fcn':lambda event: parent.change_floorplan()},
+                     {'Name':'Add Device', 'Fcn':lambda event: parent.add_device()}]
+        
+        for item in menuItems:
+            mi = wx.MenuItem(self, wx.NewId(), item['Name'])
+            self.AppendItem(mi)
+            self.Bind(wx.EVT_MENU, item['Fcn'], mi)
+            
+

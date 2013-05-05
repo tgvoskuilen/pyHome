@@ -23,4 +23,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+import wx
+import os
+
+class ConfirmRemove(wx.MessageDialog):
+    """ Confirm removal of a device """
+    #----------------------------------------------------------------------
+    def __init__(self, text):
+        wx.MessageDialog.__init__(self,None,'Are you sure you want to remove "'
+            +text+'"?\n This action cannot be undone.',
+            'Remove Device?', wx.YES_NO|wx.NO_DEFAULT|wx.ICON_QUESTION)

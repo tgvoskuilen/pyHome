@@ -23,4 +23,17 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+import wx
+
+       
+class MacroMenu(wx.Menu):
+    """ Right click context menu for macros in the Macro List """
+    def __init__(self, parent, macro):
+        wx.Menu.__init__(self)
+        
+        for item in macro.get_context_menu(parent):
+            mi = wx.MenuItem(self, wx.NewId(), item['Name'])
+            self.AppendItem(mi)
+            self.Bind(wx.EVT_MENU, item['Fcn'], mi)
+            
+

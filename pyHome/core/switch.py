@@ -23,4 +23,37 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+from device import Device
+
+class Switch(Device):
+    state_icons = ['On', 'Off']
+    
+    """
+    You must define turn_on and turn_off for this device
+    
+    .. warning:: This class is abstract. Always implement one of its subclasses
+    
+    """
+    def __init__(self, house, xml):
+        Device.__init__(self, house, xml)
+
+    def get_context_menu(self, host):
+        return [{'Name':self.name+' - '+self.room, 'Fcn':lambda event: host._show_info(self)},
+                {'Name':'Turn On', 'Fcn':self.turn_on},
+                {'Name':'Turn Off', 'Fcn':self.turn_off},
+                {'Name':'Remove Device', 'Fcn':lambda event: host._remove_device(self)}]
+                
+    def toggle(self, level=100, fast=False):
+        if self.state[0] == 'On':
+            self.turn_off(fast)
+        else:
+            self.turn_on(level,fast)
+                    
+    def turn_on(self, level=100, fast=False):
+        raise NotImplemented
+    
+    def turn_off(self, fast=False):
+        raise NotImplemented
+        
+        
+        

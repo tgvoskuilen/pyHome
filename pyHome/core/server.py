@@ -28,20 +28,22 @@ import Queue
 import socket
 import pickle
 
-#############################################################################################
+###############################################################################
 # server communication interface
 class TCPServer(threading.Thread):
     """
-    This starts and monitors a TCP server which can receive commands to call Device functions. The
-    device itself handles generating the appropriate job (which is device specific) so this only needs
-    to know the proper command (e.g. 'TurnOn')
+    This starts and monitors a TCP server which can receive commands to call 
+    Device functions. The device itself handles generating the appropriate 
+    job (which is device specific) so this only needs to know the proper 
+    command (e.g. 'turn_on')
+    
     A command can be either house-level or device-level (so far)
     The command consists of the device name, command name, and arguments
-    The return value of the appropriate function is returned to the client when the job finishes
-    or times out.
+    The return value of the appropriate function is returned to the client 
+    when the job finishes or times out.
 
-    TODO: The server needs to be more robust with respect to wacky commands, and should have a defined
-    interface with the House
+    TODO: The server needs to be more robust with respect to wacky 
+    commands, and should have a defined interface with the House
     """
     def __init__(self, ip='127.0.0.1', port=12345):
         threading.Thread.__init__(self)

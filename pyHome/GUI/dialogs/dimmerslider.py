@@ -23,4 +23,39 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+import wx
+
+
+class DimmerSlider(wx.Dialog):
+    """ Light dimmer slider dialog """
+    #----------------------------------------------------------------------
+    def __init__(self, parent, device, title="Dimmer",
+                 okButtonText='Close'):
+        wx.Dialog.__init__(self, parent, wx.ID_ANY, title, size=(450,80))
+        self.parent = parent
+        self.device = device
+
+        self.slider = wx.Slider(self, wx.ID_ANY, value=device.state[1], 
+                        minValue=0, maxValue=100, 
+                        pos=wx.DefaultPosition, 
+                        size=(250, -1),
+                        style=wx.SL_AUTOTICKS | wx.SL_HORIZONTAL | wx.SL_LABELS)
+
+        self.vBox =  wx.BoxSizer(wx.VERTICAL)
+        hBox1 = wx.BoxSizer(wx.HORIZONTAL)
+
+        hBox1.Add(self.slider, 1, wx.ALL|wx.EXPAND, 5)
+
+        self.vBox.Add(hBox1, 1, wx.EXPAND|wx.ALL, 5)
+        
+        self.SetSizer(self.vBox)
+        self.Bind(wx.EVT_SCROLL, self.onSlide)
+        self.old_state = device.state[1]
+        
+    def onSlide(self, event):
+        new_state = self.slider.GetValue()
+        if abs(self.old_state - new_state) > 5:
+            self.device.turn_on(new_state)
+            self.old_state = new_state
+
+        

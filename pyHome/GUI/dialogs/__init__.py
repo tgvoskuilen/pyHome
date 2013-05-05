@@ -23,4 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+from dimmerslider import DimmerSlider
+from filedialog import FileDialog
+from devicedialog import DeviceDialog
+from macrodialog import MacroDialog
+from confirmremove import ConfirmRemove
+from edittimeout import EditTimeout

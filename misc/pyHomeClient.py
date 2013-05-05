@@ -5,6 +5,8 @@
 #  ramp_on
 #  toggle
 #  etc...
+#
+# It doesn't work any more, but is a useful reference for now
 
 
 import socket

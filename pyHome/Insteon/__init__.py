@@ -23,4 +23,9 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from insteon import *
+from dimmer import Dimmer
+from switch import Switch
+from plm import PLM
+from message import Message
+from motionsensor import MotionSensor
+from opensensor import OpenSensor

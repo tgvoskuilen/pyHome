@@ -23,4 +23,17 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+import wx
+
+       
+class DeviceMenu(wx.Menu):
+    """ Right click context menu for devices in the Device List """
+    def __init__(self, parent, device):
+        wx.Menu.__init__(self)
+        
+        for item in device.get_context_menu(parent):
+            mi = wx.MenuItem(self, wx.NewId(), item['Name'])
+            self.AppendItem(mi)
+            self.Bind(wx.EVT_MENU, item['Fcn'], mi)
+            
+

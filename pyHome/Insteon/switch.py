@@ -23,34 +23,26 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-import Queue
-import threading
+from message import Message
 
-###############################################################################
-class BaseDevice(object):
-    """
-    .. warning:: This class is abstract. Always implement one of its subclasses
-    
-    This can be any home automation device.
-    Devices can generate Jobs to send to the PLM.
-    Each device is given a unique tag with id().
-    Each device also has a thread lock, which must be called by its methods
-    before running if the method modifies the device in any way.
-    """
-    def __init__(self, name, address):
-        """ Initialize a device with its address. """
-        self.tag = id(self)           # Unique device id number
-        self.name = name              # Device name (used in room dictionary)
-        self.address = address        # Address byte list ([0x18,0xFF,0x00])
-        self.state = ('Off',0)        # States are tuples of state and level
-        self.lock = threading.Lock()  # Device thread lock
+import pyHome.core
 
-
-    def set_state(self):
-        """
-        .. warning:: This method is not implemented in the base class.
+class Switch(pyHome.core.Switch):
+    def __init__(self, house, xml):
+        pyHome.core.Switch.__init__(self, house, xml)
         
-        This sets the device state based on an incoming message state.
-        
-        """
-        raise NotImplemented
+    def turn_on(self, level=100, fast=False):
+        """ Turn the light on to level (0-100) at a normal or fast rate """
+        level = min(max(0,level),100)
+        cmd1 = 0x12 if fast else 0x11
+        cmd2 = int(round(level * 2.55))
+        self.send( Message([0x02,0x62]+self.address+[0x0F,cmd1,cmd2]) )
+
+    def turn_off(self, fast=False):
+        """ Turn the light off at a normal or fast rate """
+        cmd1 = 0x14 if fast else 0x13
+        self.send( Message([0x02,0x62]+self.address+[0x0F,cmd1,0xFF]) )
+            
+            
+
+

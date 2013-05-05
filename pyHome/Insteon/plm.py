@@ -23,4 +23,17 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+import pyHome.core
+from message import Message
+
+class PLM(pyHome.core.PLM):
+    """
+    Provide an interface with the Insteon PLM. This is a dedicated PLM thread
+    with a send_queue that other devices can add message to. Received messages
+    are processed and passed on according to their type.
+    """
+    def __init__(self, house, usbport, baud=19200, timeout=0):
+        pyHome.core.PLM.__init__(self, house, usbport, baud, timeout)
+        self._message = Message()
+
+

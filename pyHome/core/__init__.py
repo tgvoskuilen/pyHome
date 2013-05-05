@@ -23,6 +23,13 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from devices import *
-from messages import *
-from house import *
+from switch import Switch
+from dimmer import Dimmer
+from motionSensor import MotionSensor
+from opensensor import OpenSensor
+
+from message import Message
+from rule import Rule
+from plm import PLM
+from sun import Sun
+from server import TCPServer

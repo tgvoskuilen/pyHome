@@ -24,8 +24,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
 #By default, this is all that is needed for a basic import
-from core.house import House
-from core.messages import Rule
+from house import House
 
 
 

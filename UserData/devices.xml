@@ -1,0 +1,28 @@
+<data>
+    <device name="Motion" room="Office" type="Insteon Motion Sensor">
+        <address>33:211:215</address>
+        <pos>339 600</pos>
+        <icon>Motion Sensor</icon>
+    <timeout>90.0</timeout></device>
+    <device name="Desk Lamp" room="Office" type="Insteon Dimmer">
+        <address>18:18:18</address>
+        <pos>484 604</pos>
+        <icon>Light</icon>
+    </device>
+<device name="Ceiling Fan" room="Kitchen" type="Insteon Dimmer">
+<address>12:12:12</address>
+<pos>124 154</pos>
+<icon>Fan</icon>
+</device>
+<device name="g" room="d" type="Insteon Dimmer">
+<address>1:1:1</address>
+<pos>537 94</pos>
+<icon>Light</icon>
+</device>
+<device name="d" room="w" type="Insteon Open/Close Sensor">
+<address>1:2:3</address>
+<pos>543 291</pos>
+<icon>Door</icon>
+<timeout>60.0</timeout>
+</device>
+</data>

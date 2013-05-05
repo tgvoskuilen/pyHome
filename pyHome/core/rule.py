@@ -25,64 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import time
 
-#############################################################################################
-# General message class
-class BaseMessage(object):
-    """
-    This general message class is essentially a list of bytes, with several protocol-specific
-    methods implemented on it when one of its subclasses is created.
-    """
-    def __init__(self, data=None):
-        if data is None:
-            self._data = []
-        else:
-            self._data = data
 
-    def __str__(self):
-        """ Print the bytes nicely in hex format separated by ':'s """
-        return ":".join(['%02X' % x for x in self._data])
-
-    def clear(self):
-        """ Clears the data list in the message. """
-        self._data = []
-
-    def add_byte(self, newbyte):
-        """ Adds a new byte to the end of the byte list. """
-        self._data.append(newbyte)
-        
-    def matches(self, other):
-        """
-        Checks if two messages match. This is not the same as __eq__ since this
-        allows wildcards (a -1 is a byte wildcard). The messages must still be
-        the same length.
-        """
-        return ( all([i==j or i<0 or j<0 for i, j in zip(self._data, other._data)])
-                 and len(self._data) == len(other._data) )
-        
-    def get_byte_string(self):
-        """
-        Get the message data in raw byte string format, for serial.write()
-        """
-        return "".join(['%02X' % i for i in self._data]).decode('hex')
-        
-
-    def is_complete(self):
-        """
-        .. warning:: This method is not implemented in the base class.
-        
-        Bytes are added to messages 1 at a time, and is_complete() is used by 
-        the PLM to tell when the message has gotten all of its expected bytes.
-        """
-        raise NotImplemented
-
-        
-
-
-#############################################################################################
 class Rule(object):
     """
-    Rules are kept by the House, and dictate periodic or programmatically determined actions.
-    Rules could be pre-defined in the main python script, or sent in by a client.
+    Rules are kept by the House, and dictate periodic or programmatically 
+    determined actions.
+    
+    Rules could be pre-defined in the main python script, or sent in by a 
+    client.
     
     Inputs:
      * *room* - This is a required string, either the name of a room in the House,
@@ -128,11 +78,11 @@ class Rule(object):
         self.house = house
         try:
             if self._room != 'House':
-                self.device = house.db[self._room][self._device]
+                self.device = self.house.devices[self._room][self._device]
             else:
                 self.device = self.house
-        except KeyError:
-            print "Error: Rule could not find an implementer", str(self._room), str(self._device)
+        except IndexError:
+            print "Error: Rule could not find an implementer", self._room, self._device
             self.device = None
 
 
@@ -165,24 +115,4 @@ class Rule(object):
         HH = str(time.localtime().tm_hour)
         MM = str(time.localtime().tm_min)
         return eval(self._persist_str)
-
-
-###############################################################################
-class Command(object):
-    """
-    Commands are sent in by clients (that is their only source). Unlike rules, they are
-    executed immediately by directly calling device methods (e.g. 'TurnOn'). The value
-    returned by the device method is then returned to the client.
-
-    This means if a device has problems executing the command, this may block for awhile
-    until the job times out.
-    """
-    pass
-
-
-
-    
-
-
-
 

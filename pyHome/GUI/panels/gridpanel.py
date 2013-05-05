@@ -23,4 +23,35 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+import wx
+
+class GridPanel(wx.Panel):
+    """
+    This is the main project panel
+    """
+    #----------------------------------------------------------------------
+    def __init__(self, parent):
+        """ Create the panel. This is called only when the program opens """
+        wx.Panel.__init__(self, parent=parent, id=wx.ID_ANY)
+        
+        self.parent = parent
+        self.house = parent.house
+        
+        #Organize Layout
+        self.vBox = wx.BoxSizer(wx.VERTICAL)
+        
+    #----------------------------------------------------------------------
+    def _addRow(self, entries, scaledID=-1, prePad=False, vProp=0):
+        """ Add a new row to the panel sizer """
+        hBox = wx.BoxSizer(wx.HORIZONTAL)
+        hBox.AddSpacer((15,-1),proportion=(1 if prePad else 0))
+        for id, entry in enumerate(entries):
+            hBox.Add(entry, proportion=(1 if scaledID == id else 0), 
+                     flag=(wx.ALL|wx.ALIGN_CENTER_VERTICAL if vProp == 0
+                          else wx.ALL|wx.EXPAND), border=5)
+        hBox.AddSpacer((15,-1))
+        self.vBox.Add(hBox, proportion=vProp, flag=wx.EXPAND)
+        
+    #----------------------------------------------------------------------
+    def update(self):
+        pass

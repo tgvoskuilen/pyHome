@@ -23,4 +23,15 @@ ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """
 
-from gui import Thread
+import wx
+import os
+
+class FileDialog(wx.FileDialog):
+    """ Select a file """
+    #----------------------------------------------------------------------
+    def __init__(self, parent, title, wildcard, style=wx.OPEN):
+    
+        dir = os.path.join(os.getcwd(),'UserData')
+        
+        wx.FileDialog.__init__(self, parent, title, wildcard=wildcard,
+                               defaultDir=dir, style=style)
